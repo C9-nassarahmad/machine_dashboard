@@ -12,6 +12,7 @@ import './App.css';
 import ReactToggle from 'react-toggle';
 import 'react-toggle/style.css';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import DailyReport from './DailyReport'; // Import the DailyReport component
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 const data = [
@@ -202,7 +203,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
 
   const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  //const handleShow = () => setShow(true);
 
   const notify = (machineNumber) => {
     toast(`Notification for Machine #${machineNumber} triggered!`);
@@ -230,6 +231,7 @@ function App() {
                 <Nav.Link as={Link} to="/team">Team Members</Nav.Link>
                 <Nav.Link as={Link} to="/machines">Machines</Nav.Link>
                 <Nav.Link as={Link} to="/qr-codes">QR Codes</Nav.Link>
+                <Nav.Link as={Link} to="/daily-report">Daily Report</Nav.Link> {/* Add Daily Report link */}
               </Nav>
               <div className="ml-auto d-flex align-items-center">
                 <ReactToggle
@@ -262,7 +264,6 @@ function App() {
                         <th>Time To Repair</th>
                         <th>Problem / Action</th>
                         <th>Technician</th>
-                        <th>QR Code</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -276,14 +277,6 @@ function App() {
                           <td>{item.timeToRepair}</td>
                           <td>{item.problemAction}</td>
                           <td>{item.technician}</td>
-                          <td>
-                            <QRCode 
-                              value={String(item.machineNumber)} 
-                              size={50} 
-                              onClick={() => handleQrCodeClick(item.machineNumber)}
-                              style={{ cursor: 'pointer' }}
-                            />
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -291,7 +284,7 @@ function App() {
                 </Col>
               </Row>
             } />
-            
+
             <Route path="/team" element={
               <Row className="mt-4">
                 <Col>
@@ -356,67 +349,66 @@ function App() {
               <Row className="mt-4">
                 <Col>
                   <h1 className="text-center">QR Codes</h1>
-                  <div className="d-flex flex-wrap justify-content-center">
-                    {data.map((item, index) => (
-                      <div key={index} className="m-2">
-                        <QRCode
-                          value={String(item.machineNumber)}
-                          size={100}
-                          onClick={() => handleQrCodeClick(item.machineNumber)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <p className="text-center">Machine #{item.machineNumber}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <Table className="table table-bordered" responsive striped bordered hover>
+                    <thead>
+                      <tr>
+                        <th>Machine #</th>
+                        <th>QR Code</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.machineNumber}</td>
+                          <td>
+                            <QRCode 
+                              value={String(item.machineNumber)} 
+                              size={50} 
+                              onClick={() => handleQrCodeClick(item.machineNumber)}
+                              style={{ cursor: 'pointer' }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
                 </Col>
               </Row>
             } />
+
+            <Route path="/daily-report" element={<DailyReport />} /> {/* Add the DailyReport component route */}
           </Routes>
 
-          <Row className="mt-4 text-center">
+          <Row className="mt-4">
             <Col>
-              <h1>Calendar</h1>
-              <div className="d-flex justify-content-center">
-                <Calendar onChange={setDate} value={date} />
-              </div>
-            </Col>
-          </Row>
-
-          <Row className="mt-4 text-center">
-            <Col>
-              <h1>Notifications</h1>
-              <Button variant="primary" onClick={() => notify(qrCodeData)}>Show Notification</Button>
-              <ToastContainer />
+              <h1 className="text-center">Downtime Chart</h1>
+              <Bar data={chartData} options={{ responsive: true }} />
             </Col>
           </Row>
 
           <Row className="mt-4">
             <Col>
-              <h1 className="text-center">Downtime Chart</h1>
-              <Bar data={chartData} />
+              <h1 className="text-center">Calendar</h1>
+              <Calendar onChange={setDate} value={date} />
             </Col>
           </Row>
+
+          <Modal show={show} onHide={handleClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>QR Code</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              {qrCodeData && <QRCode value={String(qrCodeData)} size={256} />}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleClose}>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal>
+
+          <ToastContainer />
         </Container>
-
-        <Modal show={show} onHide={handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>Keyboard Shortcuts</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>Shortcut 1: Description</p>
-            <p>Shortcut 2: Description</p>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        <div className="text-center">
-          <Button variant="info" onClick={handleShow} className="m-4">Show Keyboard Shortcuts</Button>
-        </div>
       </div>
     </Router>
   );
